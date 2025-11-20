@@ -253,16 +253,20 @@ IMPORTANT: If you cannot generate a message, return an empty string.`);
         .from('AGA Runs Progress')
         .select('run_id, status, campaign_name')
         .eq('user_auth_id', user.id)
-        .neq('status', 'Done')
-        .order('created_at', { ascending: false })
-        .limit(1);
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error checking active runs:', error);
         return false;
       }
 
-      return data && data.length > 0;
+      // Filter out completed runs (checking for both "Done" and "Completed" statuses)
+      const activeRuns = data?.filter(run => {
+        const status = run.status?.toLowerCase() || '';
+        return status !== 'done' && status !== 'completed';
+      }) || [];
+
+      return activeRuns.length > 0;
     } catch (error) {
       console.error('Error checking active runs:', error);
       return false;
