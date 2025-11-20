@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, RefreshCw, Download, Filter, AlertTriangle, Users, Mail, Building, Globe, MessageSquare, List, LayoutList, Trash2, MoreHorizontal, ChevronLeft, ChevronRight, Phone, MapPin, RotateCcw } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Download, Filter, AlertTriangle, Users, Mail, Building, Globe, MessageSquare, List, LayoutList, Trash2, MoreHorizontal, ChevronLeft, ChevronRight, Phone, MapPin, RotateCcw, CheckCircle, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -465,176 +465,180 @@ export function SimplifiedCampaignPage() {
   }
 
   return (
-    <div className="min-h-screen p-4 sm:p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
-            <div>
-            <Button
-              variant="ghost"
-              onClick={() => navigate('/dashboard')}
-              className="mb-4 text-muted-foreground hover:text-foreground"
-            >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Dashboard
-              </Button>
-              
-              <div className="flex items-center gap-4 mb-2">
-                <h1 className="text-3xl font-bold text-foreground">{campaign.name}</h1>
-                {getStatusBadge(agaRunStatus?.status || campaign.status || 'unknown')}
-                {/* Rerun button - only show when status contains "500" */}
-                {(agaRunStatus?.status || campaign.status || '').includes('500') && (
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Animated Background - Same as Dashboard */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-background to-blue-500/5" />
+        <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-500/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" />
+        <div className="absolute top-0 -right-4 w-72 h-72 bg-blue-500/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000" />
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000" />
+      </div>
+
+      <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto">
+        {/* Back Button */}
+        <Button
+          variant="ghost"
+          onClick={() => navigate('/dashboard')}
+          className="mb-4 sm:mb-6 hover:shadow-lg hover:shadow-primary/20 transition-all"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Dashboard
+        </Button>
+
+        {/* Header Section */}
+        <div className="mb-6 sm:mb-8">
+          <Card className="border-2 backdrop-blur-sm bg-background/80 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300">
+            <CardHeader className="border-b bg-muted/30 p-4 sm:p-6">
+              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 sm:gap-6">
+                {/* Left: Campaign Name & Status */}
+                <div className="flex-1">
+                  <div className="flex flex-wrap items-center gap-3 mb-3">
+                    <h1 className="text-2xl sm:text-3xl font-bold">{campaign.name}</h1>
+                    {getStatusBadge(agaRunStatus?.status || campaign.status || 'unknown')}
+                    {(agaRunStatus?.status || campaign.status || '').includes('500') && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={rerunCampaign}
+                        className="border-orange-500 text-orange-500 hover:bg-orange-500/10 hover:shadow-lg hover:shadow-orange-500/20 transition-all"
+                      >
+                        <RotateCcw className="w-4 h-4 mr-2" />
+                        Rerun
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    Created {formatDate(campaign.created_at)} • {campaign.source || 'Unknown source'}
+                  </p>
+                </div>
+
+                {/* Right: Actions */}
+                <div className="flex flex-wrap gap-2">
                   <Button
                     variant="outline"
+                    onClick={handleRefresh}
+                    disabled={isRefreshing}
                     size="sm"
-                    onClick={rerunCampaign}
-                    className="flex items-center gap-2 border-orange-500/30 text-orange-400 hover:bg-orange-500/20"
+                    className="hover:shadow-lg hover:shadow-primary/20 transition-all"
                   >
-                    <RotateCcw className="w-4 h-4" />
-                    Rerun
+                    <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    <span className="hidden sm:inline">Refresh</span>
                   </Button>
-                )}
+
+                  <Button onClick={exportToCsv} size="sm" className="hover:shadow-lg hover:shadow-primary/20 transition-all">
+                    <Download className="w-4 h-4 mr-2" />
+                    <span className="hidden sm:inline">Export</span>
+                  </Button>
+
+                  <AlertDialog>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="hover:shadow-lg hover:shadow-primary/20 transition-all">
+                          <MoreHorizontal className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <AlertDialogTrigger asChild>
+                          <DropdownMenuItem className="text-destructive focus:text-destructive cursor-pointer">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete Campaign
+                          </DropdownMenuItem>
+                        </AlertDialogTrigger>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Campaign</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete "{campaign.name}"?
+                          This will permanently delete the campaign and all its leads ({campaign.lead_count || 0} leads).
+                          This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={deleteCampaign}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Delete Campaign
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               </div>
-              
-              <div className="flex flex-wrap items-center gap-8 text-sm text-muted-foreground">
-                <span>Created: {formatDate(campaign.created_at)}</span>
-                <span>•</span>
-                <span>Source: {campaign.source || 'Unknown'}</span>
-                <span>•</span>
-                <span>Leads: {campaign.lead_count || 0}</span>
+            </CardHeader>
+
+            {/* Stats Grid */}
+            <CardContent className="p-4 sm:p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border-2 hover:shadow-xl hover:shadow-purple-500/20 hover:-translate-y-1 transition-all duration-300">
+                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-purple-500/10 flex items-center justify-center flex-shrink-0">
+                    <Users className="h-5 w-5 sm:h-6 sm:w-6 text-purple-500" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                      Total Leads
+                    </p>
+                    <p className="text-xl sm:text-2xl font-bold">{campaign.lead_count || 0}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border-2 hover:shadow-xl hover:shadow-green-500/20 hover:-translate-y-1 transition-all duration-300">
+                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                    <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-500" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                      Completed
+                    </p>
+                    <p className="text-xl sm:text-2xl font-bold">{parseInt(campaign.completed_count || '0')}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border-2 hover:shadow-xl hover:shadow-blue-500/20 hover:-translate-y-1 transition-all duration-300">
+                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+                    <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                      Source
+                    </p>
+                    <p className="text-base sm:text-lg font-semibold capitalize">{campaign.source || 'Unknown'}</p>
+                  </div>
+                </div>
               </div>
-            </div>
-            
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={handleRefresh}
-                disabled={isRefreshing}
-              >
-                <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-                {isRefreshing ? 'Refreshing...' : 'Refresh'}
-              </Button>
-              
-              <Button onClick={exportToCsv}>
-                <Download className="w-4 h-4 mr-2" />
-                Export CSV
-              </Button>
-              
-              {/* Delete Campaign */}
-              <AlertDialog>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="default">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <AlertDialogTrigger asChild>
-                      <DropdownMenuItem className="text-destructive focus:text-destructive cursor-pointer">
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete Campaign
-                      </DropdownMenuItem>
-                    </AlertDialogTrigger>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Campaign</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Are you sure you want to delete "{campaign.name}"? 
-                      This will permanently delete the campaign and all its leads ({campaign.lead_count || 0} leads). 
-                      This action cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction 
-                      onClick={deleteCampaign}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    >
-                      Delete Campaign
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Campaign Details - Horizontal Layout */}
-        <Card className="mb-6 bg-gradient-surface border-border shadow-card">
-          <CardContent className="p-6">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
-              <div className="text-center">
-                <div className="text-sm font-medium text-muted-foreground mb-1">Status</div>
-                <div className="flex justify-center">{getStatusBadge(agaRunStatus?.status || campaign.status || 'unknown')}</div>
+        {/* Leads Section */}
+        <Card className="border-2 backdrop-blur-sm bg-background/80 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300">
+          <CardHeader className="border-b bg-muted/30 p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <CardTitle className="text-2xl font-bold">Campaign Leads</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {getTotalLeads()} {getTotalLeads() === 1 ? 'lead' : 'leads'} in this campaign
+                </p>
               </div>
-              
-              <div className="text-center">
-                <div className="text-sm font-medium text-muted-foreground mb-1">Total Leads</div>
-                <div className="text-2xl font-bold text-primary">{(campaign.lead_count || 0).toLocaleString()}</div>
-              </div>
-              
-              <div className="text-center">
-                <div className="text-sm font-medium text-muted-foreground mb-1">Completed</div>
-                <div className="text-2xl font-bold text-success">{parseInt(campaign.completed_count || '0').toLocaleString()}</div>
-              </div>
-              
-              <div className="text-center">
-                <div className="text-sm font-medium text-muted-foreground mb-1">Source</div>
-                <div className="text-sm font-medium text-foreground truncate">{campaign.source || 'Unknown'}</div>
-              </div>
-              
-              <div className="text-center">
-                <div className="text-sm font-medium text-muted-foreground mb-1">Created</div>
-                <div className="text-sm text-foreground">{formatDate(campaign.created_at)}</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Campaign Leads - Card Block Layout */}
-        <Card className="bg-gradient-surface border-border shadow-card">
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-3 text-xl">
-                <div className="p-2 bg-purple-500/20 rounded-lg">
-                  <Users className="w-5 h-5 text-purple-400" />
-                </div>
-                Campaign Leads
-                <Badge variant="secondary" className="ml-2 bg-purple-500/20 text-purple-300 border-purple-500/30">
-                  {leads.length > 0 ? leads.reduce((total, lead) => {
-                    const leadDataArray = Array.isArray(lead.lead_data) ? lead.lead_data : [lead.lead_data];
-                    return total + (leadDataArray.filter(data => data && Object.keys(data).length > 0).length);
-                  }, 0) : 0} leads
-                </Badge>
-              </CardTitle>
-              
-              <ToggleGroup 
-                type="single" 
-                value={viewMode} 
+              <ToggleGroup
+                type="single"
+                value={viewMode}
                 onValueChange={(value) => value && setViewMode(value as 'cards' | 'grid')}
-                className="border border-border/30 bg-muted/10"
+                className="border rounded-lg"
               >
-                <ToggleGroupItem 
-                  value="cards" 
-                  aria-label="Card view"
-                  className="data-[state=on]:bg-purple-500/20 data-[state=on]:text-purple-300"
-                >
+                <ToggleGroupItem value="cards" aria-label="Card view" className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
                   <LayoutList className="h-4 w-4" />
                 </ToggleGroupItem>
-                <ToggleGroupItem 
-                  value="grid" 
-                  aria-label="List view"
-                  className="data-[state=on]:bg-purple-500/20 data-[state=on]:text-purple-300"
-                >
+                <ToggleGroupItem value="grid" aria-label="List view" className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
                   <List className="h-4 w-4" />
                 </ToggleGroupItem>
               </ToggleGroup>
             </div>
-            <Separator />
           </CardHeader>
           <CardContent className="p-0">
             {getTotalLeads() > 0 ? (
@@ -1025,13 +1029,13 @@ export function SimplifiedCampaignPage() {
                 </div>
               </div>
             ) : (
-              <div className="p-12 text-center">
-                <div className="w-16 h-16 mx-auto mb-4 bg-muted/30 rounded-full flex items-center justify-center">
+              <div className="p-20 text-center">
+                <div className="mx-auto w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
                   <AlertTriangle className="w-8 h-8 text-muted-foreground" />
                 </div>
-                <h3 className="text-lg font-medium text-foreground mb-2">No leads found</h3>
-                <p className="text-muted-foreground">
-                  Leads will appear here once they are processed for this campaign.
+                <h3 className="text-xl font-semibold mb-2">No leads found</h3>
+                <p className="text-muted-foreground max-w-md mx-auto">
+                  Leads will appear here once they are processed for this campaign. Check back soon!
                 </p>
               </div>
             )}

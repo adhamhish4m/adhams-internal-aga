@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Upload, Rocket, Loader2, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Upload, Rocket, Loader2, AlertTriangle, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -95,7 +95,21 @@ IMPORTANT: If you cannot generate a message, return an empty string.`);
   const [csvValidationStatus, setCsvValidationStatus] = useState<'idle' | 'valid' | 'invalid'>('idle');
   const [csvValidationError, setCsvValidationError] = useState<string>('');
   const [csvRowCount, setCsvRowCount] = useState<number>(0);
+  const [hasActiveRuns, setHasActiveRuns] = useState(false);
   const { toast } = useToast();
+
+  // Check for active runs on component mount and periodically
+  useEffect(() => {
+    const checkRuns = async () => {
+      const active = await checkForActiveRuns();
+      setHasActiveRuns(active);
+    };
+
+    checkRuns();
+    const interval = setInterval(checkRuns, 10000); // Check every 10 seconds
+
+    return () => clearInterval(interval);
+  }, [user]);
 
   // Check if campaign name already exists
   const checkCampaignNameExists = async (name: string) => {
@@ -230,6 +244,51 @@ IMPORTANT: If you cannot generate a message, return an empty string.`);
   };
 
 
+  // Check if there are any active runs for the current user
+  const checkForActiveRuns = async (): Promise<boolean> => {
+    if (!user) return false;
+
+    try {
+      const { data, error } = await supabase
+        .from('AGA Runs Progress')
+        .select('run_id, status, campaign_name')
+        .eq('user_auth_id', user.id)
+        .neq('status', 'Done')
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.error('Error checking active runs:', error);
+        return false;
+      }
+
+      return data && data.length > 0;
+    } catch (error) {
+      console.error('Error checking active runs:', error);
+      return false;
+    }
+  };
+
+  // Wait for active runs to complete
+  const waitForActiveRunsToComplete = async (): Promise<void> => {
+    const pollInterval = 5000; // Poll every 5 seconds
+    const maxWaitTime = 1800000; // Maximum 30 minutes
+    const startTime = Date.now();
+
+    while (Date.now() - startTime < maxWaitTime) {
+      const hasActiveRuns = await checkForActiveRuns();
+
+      if (!hasActiveRuns) {
+        return; // No active runs, proceed
+      }
+
+      // Wait before polling again
+      await new Promise(resolve => setTimeout(resolve, pollInterval));
+    }
+
+    throw new Error('Timeout waiting for active runs to complete');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -245,7 +304,7 @@ IMPORTANT: If you cannot generate a message, return an empty string.`);
       return;
     }
 
-    
+
     if (!user) {
       toast({
         title: "Error",
@@ -262,6 +321,34 @@ IMPORTANT: If you cannot generate a message, return an empty string.`);
       toast({
         title: "Duplicate Campaign Name",
         description: "A campaign with this name already exists. Please choose a different name.",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Check for active runs and wait if necessary
+    try {
+      const hasActiveRuns = await checkForActiveRuns();
+
+      if (hasActiveRuns) {
+        toast({
+          title: "Waiting in Queue",
+          description: "You have an active run in progress. Waiting for it to complete before starting this campaign...",
+        });
+
+        await waitForActiveRunsToComplete();
+
+        toast({
+          title: "Queue Ready",
+          description: "Previous run completed. Starting your campaign now...",
+        });
+      }
+    } catch (error) {
+      console.error('Error waiting for active runs:', error);
+      toast({
+        title: "Queue Error",
+        description: "Could not verify run queue status. Please try again.",
         variant: "destructive",
       });
       setIsSubmitting(false);
@@ -463,27 +550,35 @@ IMPORTANT: If you cannot generate a message, return an empty string.`);
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Animated Background - Same as Dashboard */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-background to-blue-500/5" />
+        <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-500/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" />
+        <div className="absolute top-0 -right-4 w-72 h-72 bg-blue-500/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000" />
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000" />
+      </div>
+
       <Navigation />
 
       <div className="flex items-center justify-center p-4 pt-20">
         <div className="w-full max-w-4xl">
         <div className="space-y-6">
           {/* Main Form */}
-          <Card className="p-8 bg-gradient-surface border-border shadow-elevated">
-            <div className="mb-6">
-              <h2 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
+          <Card className="p-6 sm:p-8 border-2 backdrop-blur-sm bg-background/80 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300">
+            <div className="mb-6 sm:mb-8">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary-glow to-primary">
                 AI Growth Accelerator
               </h2>
-              <p className="text-muted-foreground">
+              <p className="text-sm sm:text-base text-muted-foreground">
                 Upload your leads and let our AI generate personalized icebreakers that convert
               </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Campaign Name */}
-              <div className="space-y-3">
-                <Label htmlFor="campaignName" className="text-foreground font-medium">
+              <div className="space-y-3 group">
+                <Label htmlFor="campaignName" className="text-foreground font-medium text-sm sm:text-base">
                   Campaign Name
                 </Label>
                 <Input
@@ -492,25 +587,28 @@ IMPORTANT: If you cannot generate a message, return an empty string.`);
                   placeholder="Enter campaign name"
                   value={formData.campaignName}
                   onChange={handleCampaignNameChange}
-                  className="bg-input border-border"
+                  className="bg-input border-2 hover:border-primary/50 focus:border-primary transition-all duration-300"
                 />
                 {campaignNameError && (
-                  <p className="text-sm text-destructive mt-1">{campaignNameError}</p>
+                  <p className="text-sm text-destructive mt-1 flex items-center gap-1">
+                    <XCircle className="w-4 h-4" />
+                    {campaignNameError}
+                  </p>
                 )}
               </div>
 
               {/* Lead Source Selection */}
               <div className="space-y-3">
-                <Label htmlFor="leadSource" className="text-foreground font-medium">
+                <Label htmlFor="leadSource" className="text-foreground font-medium text-sm sm:text-base">
                   Lead Information Source
                 </Label>
-                <Select 
-                  value={formData.leadSource} 
+                <Select
+                  value={formData.leadSource}
                   onValueChange={(value: 'apollo' | 'csv') => {
                     setFormData(prev => ({ ...prev, leadSource: value }));
                   }}
                 >
-                  <SelectTrigger className="bg-input border-border">
+                  <SelectTrigger className="bg-input border-2 hover:border-primary/50 transition-all duration-300">
                     <SelectValue placeholder="Select your lead source" />
                   </SelectTrigger>
                   <SelectContent>
@@ -524,7 +622,7 @@ IMPORTANT: If you cannot generate a message, return an empty string.`);
               {formData.leadSource === 'apollo' && (
                 <div className="space-y-6">
                   <div className="space-y-3">
-                    <Label htmlFor="apolloUrl" className="text-foreground font-medium">
+                    <Label htmlFor="apolloUrl" className="text-foreground font-medium text-sm sm:text-base">
                       Apollo URL
                     </Label>
                     <Input
@@ -535,17 +633,17 @@ IMPORTANT: If you cannot generate a message, return an empty string.`);
                       onChange={(e) => {
                         setFormData(prev => ({ ...prev, apolloUrl: e.target.value }));
                       }}
-                      className="bg-input border-border"
+                      className="bg-input border-2 hover:border-primary/50 focus:border-primary transition-all duration-300"
                       required
                     />
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs sm:text-sm text-muted-foreground">
                       Paste your Apollo search URL here. We'll automatically extract the leads from it.
                     </p>
                   </div>
 
                   {/* Lead Count Section */}
                   <div className="space-y-3 border-t border-border pt-4">
-                    <Label htmlFor="leadCount" className="text-foreground font-medium">
+                    <Label htmlFor="leadCount" className="text-foreground font-medium text-sm sm:text-base">
                       Number of Leads to Process
                     </Label>
                     <Input
@@ -569,22 +667,22 @@ IMPORTANT: If you cannot generate a message, return an empty string.`);
                           setFormData(prev => ({ ...prev, leadCount: 10000 }));
                         }
                       }}
-                      className="bg-input border-border"
+                      className="bg-input border-2 hover:border-primary/50 focus:border-primary transition-all duration-300"
                     />
 
                     {/* Warning for large lead counts */}
                     {typeof formData.leadCount === 'number' && formData.leadCount > 1000 && (
-                      <div className="mt-2 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                      <div className="mt-2 p-3 sm:p-4 bg-yellow-500/10 border-2 border-yellow-500/30 rounded-lg hover:shadow-lg hover:shadow-yellow-500/20 transition-all duration-300">
                         <div className="flex items-start gap-2">
-                          <AlertTriangle className="w-4 h-4 text-yellow-500 mt-0.5 flex-shrink-0" />
-                          <div className="text-sm text-yellow-600 dark:text-yellow-400">
+                          <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500 mt-0.5 flex-shrink-0" />
+                          <div className="text-xs sm:text-sm text-yellow-600 dark:text-yellow-400">
                             <span className="font-medium">Large Lead Count:</span> Processing {formData.leadCount.toLocaleString()} leads will take significantly longer to complete. Consider breaking this into smaller batches for faster processing.
                           </div>
                         </div>
                       </div>
                     )}
 
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                       Range: 500 - 10,000 leads
                     </p>
                   </div>
@@ -595,12 +693,12 @@ IMPORTANT: If you cannot generate a message, return an empty string.`);
               {/* CSV Upload */}
               {formData.leadSource === 'csv' && (
                 <div className="space-y-3">
-                  <Label htmlFor="csvFile" className="text-foreground font-medium">
+                  <Label htmlFor="csvFile" className="text-foreground font-medium text-sm sm:text-base">
                     Upload CSV File
                   </Label>
-                  
+
                   {/* CSV Requirements */}
-                  <div className="bg-muted/20 rounded-lg p-4 border border-border/30">
+                  <div className="bg-muted/20 rounded-lg p-3 sm:p-4 border-2 border-border/30 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300">
                     <div className="space-y-3">
                       <div className="mb-3 p-2 bg-yellow-500/10 border border-yellow-500/30 rounded">
                         <p className="text-xs text-yellow-600 dark:text-yellow-400 font-medium">
@@ -636,10 +734,10 @@ IMPORTANT: If you cannot generate a message, return an empty string.`);
                   </div>
                   
                   <div
-                    className={`border-2 rounded-lg p-8 transition-all ${
+                    className={`border-2 rounded-lg p-6 sm:p-8 transition-all duration-300 ${
                       isDragOver
-                        ? 'border-blue-400 bg-blue-50/50 dark:bg-blue-950/30'
-                        : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 hover:border-blue-300 dark:hover:border-blue-700'
+                        ? 'border-primary bg-primary/10 shadow-xl shadow-primary/20'
+                        : 'border-border bg-background/50 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10'
                     }`}
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
@@ -647,9 +745,9 @@ IMPORTANT: If you cannot generate a message, return an empty string.`);
                   >
                     <div className="flex items-center justify-center">
                       <div className="text-center">
-                        <Upload className={`mx-auto h-10 w-10 mb-3 ${isDragOver ? 'text-blue-500' : 'text-gray-400 dark:text-gray-500'}`} />
+                        <Upload className={`mx-auto h-8 w-8 sm:h-10 sm:w-10 mb-3 transition-all duration-300 ${isDragOver ? 'text-primary scale-110' : 'text-muted-foreground'}`} />
                         <Label htmlFor="csvFile" className="cursor-pointer">
-                          <span className={`text-sm font-medium ${isDragOver ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'}`}>
+                          <span className={`text-xs sm:text-sm font-medium transition-colors ${isDragOver ? 'text-primary' : 'text-foreground'}`}>
                             {isDragOver ? 'Drop your CSV file here' : 'Click to upload or drag and drop your CSV file'}
                           </span>
                           <Input
@@ -661,7 +759,8 @@ IMPORTANT: If you cannot generate a message, return an empty string.`);
                           />
                         </Label>
                         {formData.csvFile && (
-                          <p className="text-sm text-blue-600 dark:text-blue-400 font-semibold mt-3">
+                          <p className="text-xs sm:text-sm text-primary font-semibold mt-3 flex items-center justify-center gap-1">
+                            <CheckCircle className="w-4 h-4" />
                             Selected: {formData.csvFile.name}
                           </p>
                         )}
@@ -691,15 +790,15 @@ IMPORTANT: If you cannot generate a message, return an empty string.`);
               )}
 
               {/* Research System Prompt */}
-              <Card className="p-6 bg-blue-50/50 dark:bg-blue-950/20 border-2 border-blue-200 dark:border-blue-800 shadow-lg">
+              <Card className="p-4 sm:p-6 bg-blue-50/50 dark:bg-blue-950/20 border-2 border-blue-200 dark:border-blue-800 backdrop-blur-sm hover:shadow-xl hover:shadow-blue-500/20 transition-all duration-300">
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <Label htmlFor="researchSystemPrompt" className="text-lg font-semibold text-blue-900 dark:text-blue-100">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                    <Label htmlFor="researchSystemPrompt" className="text-base sm:text-lg font-semibold text-blue-900 dark:text-blue-100">
                       Research System Prompt
                     </Label>
                   </div>
-                  <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
+                  <p className="text-xs sm:text-sm text-blue-700 dark:text-blue-300 mb-3">
                     This prompt guides Perplexity to research each lead before personalization.
                   </p>
                   <Textarea
@@ -707,21 +806,21 @@ IMPORTANT: If you cannot generate a message, return an empty string.`);
                     placeholder="Enter your research system prompt..."
                     value={researchSystemPrompt}
                     onChange={(e) => setResearchSystemPrompt(e.target.value)}
-                    className="bg-white dark:bg-gray-900 border-blue-300 dark:border-blue-700 min-h-[250px] font-mono text-sm focus:ring-2 focus:ring-blue-500"
+                    className="bg-white dark:bg-gray-900 border-2 border-blue-300 dark:border-blue-700 min-h-[250px] font-mono text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 hover:border-blue-400 transition-all duration-300"
                   />
                 </div>
               </Card>
 
               {/* Personalization System Prompt */}
-              <Card className="p-6 bg-purple-50/50 dark:bg-purple-950/20 border-2 border-purple-200 dark:border-purple-800 shadow-lg">
+              <Card className="p-4 sm:p-6 bg-purple-50/50 dark:bg-purple-950/20 border-2 border-purple-200 dark:border-purple-800 backdrop-blur-sm hover:shadow-xl hover:shadow-purple-500/20 transition-all duration-300">
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                    <Label htmlFor="personalizationSystemPrompt" className="text-lg font-semibold text-purple-900 dark:text-purple-100">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
+                    <Label htmlFor="personalizationSystemPrompt" className="text-base sm:text-lg font-semibold text-purple-900 dark:text-purple-100">
                       Personalization System Prompt
                     </Label>
                   </div>
-                  <p className="text-sm text-purple-700 dark:text-purple-300 mb-3">
+                  <p className="text-xs sm:text-sm text-purple-700 dark:text-purple-300 mb-3">
                     Configure how the AI creates personalized icebreakers based on research.
                   </p>
                   <Textarea
@@ -729,7 +828,7 @@ IMPORTANT: If you cannot generate a message, return an empty string.`);
                     placeholder="Enter your personalization system prompt..."
                     value={personalizationSystemPrompt}
                     onChange={(e) => setPersonalizationSystemPrompt(e.target.value)}
-                    className="bg-white dark:bg-gray-900 border-purple-300 dark:border-purple-700 min-h-[400px] font-mono text-sm focus:ring-2 focus:ring-purple-500"
+                    className="bg-white dark:bg-gray-900 border-2 border-purple-300 dark:border-purple-700 min-h-[400px] font-mono text-xs sm:text-sm focus:ring-2 focus:ring-purple-500 hover:border-purple-400 transition-all duration-300"
                   />
                 </div>
               </Card>
@@ -737,17 +836,22 @@ IMPORTANT: If you cannot generate a message, return an empty string.`);
               {/* Submit Button */}
               <Button
                 type="submit"
-                className="w-full bg-gradient-primary hover:opacity-90 transition-opacity py-6 text-lg"
+                className="w-full bg-gradient-to-r from-primary via-primary-glow to-primary hover:shadow-2xl hover:shadow-primary/40 hover:scale-[1.02] transition-all duration-300 py-5 sm:py-6 text-base sm:text-lg font-semibold"
                 disabled={!isFormValid() || isSubmitting || campaignNameError !== ''}
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-spin" />
                     In Queue
+                  </>
+                ) : hasActiveRuns ? (
+                  <>
+                    <Clock className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                    Add to Queue
                   </>
                 ) : (
                   <>
-                    <Rocket className="w-5 h-5 mr-2" />
+                    <Rocket className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                     Let's Go!
                   </>
                 )}

@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BarChart3, Clock, DollarSign, Zap, CheckCircle, XCircle, AlertCircle, RefreshCw, ExternalLink, User, TrendingUp, Target, Award, Trash2, MoreHorizontal } from 'lucide-react';
+import { BarChart3, Clock, CheckCircle, XCircle, AlertCircle, RefreshCw, ExternalLink, User, Target, Trash2, MoreHorizontal, Rocket } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -27,48 +26,10 @@ interface RunHistory {
 export function Dashboard() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, signOut } = useAuth();
-  const [stats, setStats] = useState({
-    totalMessages: 0,
-    hoursSaved: 0,
-    moneySaved: 0,
-  });
+  const { user } = useAuth();
   const [runHistory, setRunHistory] = useState<RunHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-
-  // Get user profile data
-  const [userProfile, setUserProfile] = useState<any>(null);
-
-  // Fetch user metrics from Supabase
-  const fetchClientMetrics = useCallback(async () => {
-    if (!user?.id) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('Client Metrics')
-        .select('num_personalized_leads,hours_saved,money_saved')
-        .eq('user_auth_id', user.id);
-
-      if (error) {
-        console.error('Error fetching client metrics:', error);
-        return;
-      }
-
-      if (data && data.length > 0) {
-        // Aggregate data from multiple rows
-        const aggregated = data.reduce((acc, row) => ({
-          totalMessages: acc.totalMessages + parseInt(row.num_personalized_leads || '0'),
-          hoursSaved: acc.hoursSaved + parseInt(row.hours_saved || '0'),
-          moneySaved: acc.moneySaved + parseInt(row.money_saved || '0'),
-        }), { totalMessages: 0, hoursSaved: 0, moneySaved: 0 });
-
-        setStats(aggregated);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  }, [user?.id]);
 
   // Fetch run history from Supabase for current user
   const fetchRunHistory = useCallback(async () => {
@@ -97,36 +58,12 @@ export function Dashboard() {
     }
   }, [user?.id]);
 
-  // Fetch user profile
-  const fetchUserProfile = useCallback(async () => {
-    if (!user?.id) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (error) {
-        console.error('Error fetching user profile:', error);
-        return;
-      }
-
-      setUserProfile(data);
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  }, [user?.id]);
-
   // Fetch data when user is available
   useEffect(() => {
     if (user?.id) {
-      fetchUserProfile();
-      fetchClientMetrics();
       fetchRunHistory();
     }
-  }, [user?.id, fetchUserProfile, fetchClientMetrics, fetchRunHistory]);
+  }, [user?.id, fetchRunHistory]);
 
   // Set up real-time subscription for run updates
   useEffect(() => {
@@ -144,7 +81,6 @@ export function Dashboard() {
         (payload) => {
           console.log('Run update received:', payload);
           fetchRunHistory(); // Refetch all runs when any update occurs
-          fetchClientMetrics(); // Also refetch metrics when runs update
         }
       )
       .subscribe();
@@ -152,17 +88,17 @@ export function Dashboard() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [fetchRunHistory, fetchClientMetrics, user?.id]);
+  }, [fetchRunHistory, user?.id]);
 
   // Manual refresh function
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      await Promise.all([fetchClientMetrics(), fetchRunHistory()]);
+      await fetchRunHistory();
     } finally {
       setIsRefreshing(false);
     }
-  }, [fetchClientMetrics, fetchRunHistory]);
+  }, [fetchRunHistory]);
 
   // Delete campaign function
   const deleteCampaign = async (campaignName: string, runId: string) => {
@@ -324,11 +260,6 @@ export function Dashboard() {
 
       // Clear local state immediately
       setRunHistory([]);
-      setStats({
-        totalMessages: 0,
-        hoursSaved: 0,
-        moneySaved: 0,
-      });
 
       toast({
         title: "All Campaigns Deleted",
@@ -428,190 +359,145 @@ export function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-background to-blue-500/5" />
+        <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-500/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" />
+        <div className="absolute top-0 -right-4 w-72 h-72 bg-blue-500/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000" />
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000" />
+      </div>
+
       <Navigation />
-      <div className="p-4 sm:p-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="mb-6 sm:mb-8">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-              <div>
-                <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Analytics Dashboard</h2>
-                <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-                  Track your AI-powered growth acceleration
-                </p>
-              </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <User className="w-4 h-4" />
-                <span>{user?.email}</span>
-              </div>
-              <Button 
-                onClick={handleRefresh} 
-                disabled={isRefreshing}
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                {isRefreshing ? 'Refreshing...' : 'Refresh'}
-              </Button>
-            </div>
+
+      {/* Main Container */}
+      <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto">
+        {/* Top Bar - Stats Overview */}
+        <div className="mb-6 sm:mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            {/* Total Campaigns Stat */}
+            <Card className="border-2 hover:shadow-2xl hover:shadow-primary/20 hover:-translate-y-1 transition-all duration-300 backdrop-blur-sm bg-background/80">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1 sm:mb-2">
+                      Total Campaigns
+                    </p>
+                    <p className="text-2xl sm:text-3xl font-bold">{runHistory.length}</p>
+                  </div>
+                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                    <Target className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Active Runs Stat */}
+            <Card className="border-2 hover:shadow-2xl hover:shadow-blue-500/20 hover:-translate-y-1 transition-all duration-300 backdrop-blur-sm bg-background/80">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1 sm:mb-2">
+                      Active Runs
+                    </p>
+                    <p className="text-2xl sm:text-3xl font-bold text-blue-500">
+                      {runHistory.filter(run => run.status !== 'Done').length}
+                    </p>
+                  </div>
+                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
+                    <RefreshCw className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Total Leads Stat */}
+            <Card className="border-2 hover:shadow-2xl hover:shadow-purple-500/20 hover:-translate-y-1 transition-all duration-300 backdrop-blur-sm bg-background/80">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1 sm:mb-2">
+                      Total Leads
+                    </p>
+                    <p className="text-2xl sm:text-3xl font-bold text-purple-500">
+                      {runHistory.reduce((sum, run) => sum + (run.lead_count || 0), 0).toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-colors">
+                    <User className="h-5 w-5 sm:h-6 sm:w-6 text-purple-500" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Completed Stat */}
+            <Card className="border-2 hover:shadow-2xl hover:shadow-green-500/20 hover:-translate-y-1 transition-all duration-300 backdrop-blur-sm bg-background/80">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1 sm:mb-2">
+                      Completed
+                    </p>
+                    <p className="text-2xl sm:text-3xl font-bold text-green-500">
+                      {runHistory.filter(run => run.status === 'Done').length}
+                    </p>
+                  </div>
+                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-green-500/10 flex items-center justify-center group-hover:bg-green-500/20 transition-colors">
+                    <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-500" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
 
-
-        {/* Enhanced Stats Cards */}
-        <TooltipProvider>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
-            {/* Total Messages Card */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Card className="bg-gradient-surface border-border shadow-card metric-card-hover group cursor-pointer">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Total Personalized Messages
-                    </CardTitle>
-                    <div className="p-2 bg-purple-500/20 rounded-lg group-hover:bg-purple-500/30 transition-colors">
-                      <Zap className="h-4 w-4 text-purple-400" />
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="text-2xl sm:text-3xl font-bold text-purple-400">
-                      {stats.totalMessages.toLocaleString()}
-                    </div>
-                    <Separator />
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="text-xs bg-purple-500/20 text-purple-300 border-purple-500/30">
-                        <TrendingUp className="w-3 h-3 mr-1" />
-                        Generated
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        Across all campaigns
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>AI-generated personalized messages for all your campaigns</p>
-              </TooltipContent>
-            </Tooltip>
-
-            {/* Hours Saved Card */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Card className="bg-gradient-surface border-border shadow-card metric-card-hover group cursor-pointer">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Hours Saved
-                    </CardTitle>
-                    <div className="p-2 bg-blue-500/20 rounded-lg group-hover:bg-blue-500/30 transition-colors">
-                      <Clock className="h-4 w-4 text-blue-400" />
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="text-2xl sm:text-3xl font-bold text-blue-400">
-                      {stats.hoursSaved.toLocaleString()}
-                    </div>
-                    <Separator />
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="text-xs bg-blue-500/20 text-blue-300 border-blue-500/30">
-                        <Clock className="w-3 h-3 mr-1" />
-                        Time Saved
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        vs Manual Outreach
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Time saved using AGA vs manual personalization</p>
-              </TooltipContent>
-            </Tooltip>
-
-            {/* Money Saved Card */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Card className="bg-gradient-surface border-border shadow-card metric-card-hover group cursor-pointer sm:col-span-2 lg:col-span-1">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Money Saved
-                    </CardTitle>
-                    <div className="p-2 bg-green-500/20 rounded-lg group-hover:bg-green-500/30 transition-colors">
-                      <DollarSign className="h-4 w-4 text-green-400" />
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="text-2xl sm:text-3xl font-bold text-green-400">
-                      ${stats.moneySaved.toLocaleString()}
-                    </div>
-                    <Separator />
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs border-green-500/30 text-green-300 bg-green-500/10">
-                        <Award className="w-3 h-3 mr-1" />
-                        Savings
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        Estimated cost reduction
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Estimated cost savings compared to hiring team members</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        </TooltipProvider>
-
-        {/* Enhanced Run History */}
-        <Card className="bg-gradient-surface border-border shadow-card">
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-3 text-foreground">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <BarChart3 className="h-5 w-5 text-primary" />
+        {/* Main Content - Campaigns Table */}
+        <Card className="border-2 backdrop-blur-sm bg-background/80 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300">
+          <CardHeader className="border-b bg-muted/30 p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <CardTitle className="text-xl sm:text-2xl font-bold">Campaigns</CardTitle>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                  {runHistory.length === 0
+                    ? 'No campaigns created yet'
+                    : `Manage your ${runHistory.length} ${runHistory.length === 1 ? 'campaign' : 'campaigns'}`
+                  }
+                </p>
               </div>
-              Recent Activity
-              <div className="ml-auto flex items-center gap-2">
-                <Badge variant="outline" className="text-xs">
-                  {runHistory.length} runs
-                </Badge>
-                
-                {/* Delete All Campaigns Button */}
+
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Button
+                  onClick={handleRefresh}
+                  disabled={isRefreshing}
+                  variant="outline"
+                  size="sm"
+                  className="hover:shadow-lg hover:shadow-primary/20 transition-all"
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  <span className="hidden sm:inline">Refresh</span>
+                </Button>
+
                 {runHistory.length > 0 && (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button 
-                        variant="destructive"
-                        size="sm"
-                        className="h-7 px-2 text-xs"
-                      >
-                        <Trash2 className="h-3 w-3 mr-1" />
-                        Delete All
+                      <Button variant="destructive" size="sm" className="hover:shadow-lg hover:shadow-destructive/20 transition-all">
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        <span className="hidden sm:inline">Delete All</span>
                       </Button>
                     </AlertDialogTrigger>
-                    
                     <AlertDialogContent>
                       <AlertDialogHeader>
                         <AlertDialogTitle>Delete All Campaigns</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Are you sure you want to delete ALL {runHistory.length} campaigns? 
-                          This will permanently delete:
-                          <br />• All campaign data
-                          <br />• All associated leads 
-                          <br />• All run history
-                          <br />• All personalized messages
+                          Are you sure you want to delete ALL {runHistory.length} campaigns?
+                          This will permanently delete all campaign data, leads, run history, and personalized messages.
                           <br /><br />
                           <strong>This action cannot be undone.</strong>
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction 
+                        <AlertDialogAction
                           onClick={deleteAllCampaigns}
                           className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >
@@ -622,106 +508,122 @@ export function Dashboard() {
                   </AlertDialog>
                 )}
               </div>
-            </CardTitle>
-            <Separator />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {runHistory.map((run, index) => (
-                <TooltipProvider key={run.run_id}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div 
-                        className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 rounded-xl bg-gradient-to-r from-muted/20 to-muted/10 border border-border/30 gap-3 sm:gap-4 hover:from-muted/30 hover:to-muted/20 hover:border-primary/20 transition-all duration-200 cursor-pointer group"
-                        onClick={() => run.campaign_name && navigate(`/campaign/${encodeURIComponent(run.campaign_name)}`)}
-                      >
-                        {/* Left side - Campaign info */}
-                        <div className="flex items-center gap-4">
-                          <div className="flex-shrink-0 relative">
-                            {getStatusIcon(run.status)}
-                            {index < runHistory.length - 1 && (
-                              <div className="absolute top-8 left-1/2 transform -translate-x-1/2 w-px h-6 bg-border/30" />
+
+          <CardContent className="p-0">
+            {runHistory.length > 0 ? (
+              <div className="divide-y">
+                {runHistory.map((run) => (
+                  <div
+                    key={run.run_id}
+                    className="group p-4 sm:p-6 hover:bg-primary/5 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 cursor-pointer relative overflow-hidden"
+                    onClick={() => run.campaign_name && navigate(`/campaign/${encodeURIComponent(run.campaign_name)}`)}
+                  >
+                    {/* Hover glow effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                    <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
+                      {/* Left: Status Icon + Campaign Info */}
+                      <div className="flex items-center gap-4 flex-1 min-w-0">
+                        <div className="flex-shrink-0">
+                          {getStatusIcon(run.status)}
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-lg font-semibold truncate group-hover:text-primary transition-colors">
+                              {run.campaign_name || 'Unnamed Campaign'}
+                            </h3>
+                            <ExternalLink className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                          </div>
+
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <span className="flex items-center gap-1.5">
+                              <Target className="w-4 h-4" />
+                              {run.lead_count ? run.lead_count.toLocaleString() : '0'} leads
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                              <Clock className="w-4 h-4" />
+                              {formatTimeAgo(run.created_at)}
+                            </span>
+                            {run.source && (
+                              <span className="flex items-center gap-1.5">
+                                <BarChart3 className="w-4 h-4" />
+                                {run.source}
+                              </span>
                             )}
                           </div>
-                          
-                          <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-2 mb-2">
-                              <span className="font-semibold text-foreground text-base group-hover:text-primary transition-colors truncate">
-                                {run.campaign_name || 'Unnamed Campaign'}
-                              </span>
-                              <ExternalLink className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
-                            </div>
-                            
-                            <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                              <div className="flex items-center gap-1">
-                                <Target className="w-3 h-3" />
-                                <span>{run.lead_count ? run.lead_count.toLocaleString() : '0'} leads</span>
-                              </div>
-                              <Separator orientation="vertical" className="h-4" />
-                              <span>{formatTimeAgo(run.created_at)}</span>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Right side - Status and Actions */}
-                        <div className="flex items-center gap-3 self-start sm:self-center">
-                          {getStatusBadge(run.status, run.run_id)}
-                          
-                          {/* Delete Button */}
-                          <AlertDialog>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
-                                  className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                                <AlertDialogTrigger asChild>
-                                  <DropdownMenuItem className="text-destructive focus:text-destructive cursor-pointer">
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Delete Campaign
-                                  </DropdownMenuItem>
-                                </AlertDialogTrigger>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                            
-                            <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Campaign</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete "{run.campaign_name || 'Unnamed Campaign'}"? 
-                                  This will permanently delete the campaign and all its leads. This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction 
-                                  onClick={() => run.campaign_name && deleteCampaign(run.campaign_name, run.run_id)}
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                >
-                                  Delete Campaign
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
                         </div>
                       </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Click to view campaign details</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              ))}
-            </div>
+
+                      {/* Right: Status Badge + Actions */}
+                      <div className="flex items-center gap-3">
+                        {getStatusBadge(run.status, run.run_id)}
+
+                        <AlertDialog>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                              <AlertDialogTrigger asChild>
+                                <DropdownMenuItem className="text-destructive focus:text-destructive cursor-pointer">
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete Campaign
+                                </DropdownMenuItem>
+                              </AlertDialogTrigger>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+
+                          <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Campaign</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete "{run.campaign_name || 'Unnamed Campaign'}"?
+                                This will permanently delete the campaign and all its leads. This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => run.campaign_name && deleteCampaign(run.campaign_name, run.run_id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Delete Campaign
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-20">
+                <div className="mx-auto w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
+                  <Target className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">No campaigns yet</h3>
+                <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+                  Create your first campaign to start personalizing outreach at scale
+                </p>
+                <Button onClick={() => navigate('/form')} size="lg">
+                  <Rocket className="w-4 h-4 mr-2" />
+                  Create Your First Campaign
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
-        </div>
       </div>
     </div>
   );
