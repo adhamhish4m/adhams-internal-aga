@@ -34,7 +34,7 @@ export function Dashboard() {
   // Fetch run history from Supabase for current user
   const fetchRunHistory = useCallback(async () => {
     if (!user?.id) return;
-    
+
     try {
       const { data, error } = await supabase
         .from('AGA Runs Progress')
@@ -49,7 +49,27 @@ export function Dashboard() {
       }
 
       if (data) {
-        setRunHistory(data);
+        // Fetch completed counts from campaigns table for each run
+        const runsWithCompletedCounts = await Promise.all(
+          data.map(async (run) => {
+            if (run.campaign_name) {
+              const { data: campaignData } = await supabase
+                .from('campaigns')
+                .select('completed_count')
+                .eq('name', run.campaign_name)
+                .eq('user_auth_id', user.id)
+                .maybeSingle();
+
+              return {
+                ...run,
+                lead_count: parseInt(campaignData?.completed_count || '0') || 0
+              };
+            }
+            return run;
+          })
+        );
+
+        setRunHistory(runsWithCompletedCounts);
       }
     } catch (error) {
       console.error('Error:', error);
