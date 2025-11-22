@@ -394,76 +394,59 @@ export function Dashboard() {
       <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto">
         {/* Top Bar - Stats Overview */}
         <div className="mb-6 sm:mb-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            {/* Total Campaigns Stat */}
-            <Card className="border-2 hover:shadow-2xl hover:shadow-primary/20 hover:-translate-y-1 transition-all duration-300 backdrop-blur-sm bg-background/80">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            {/* Total Personalized Messages */}
+            <Card className="border-2 hover:shadow-2xl hover:shadow-green-500/20 hover:-translate-y-1 transition-all duration-300 backdrop-blur-sm bg-background/80">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1 sm:mb-2">
+                      Personalized Messages
+                    </p>
+                    <p className="text-2xl sm:text-3xl font-bold text-green-500">
+                      {runHistory.reduce((sum, run) => sum + (run.lead_count || 0), 0).toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-green-500/10 flex items-center justify-center group-hover:bg-green-500/20 transition-colors">
+                    <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-500" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Total Campaigns */}
+            <Card className="border-2 hover:shadow-2xl hover:shadow-blue-500/20 hover:-translate-y-1 transition-all duration-300 backdrop-blur-sm bg-background/80">
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1 sm:mb-2">
                       Total Campaigns
                     </p>
-                    <p className="text-2xl sm:text-3xl font-bold">{runHistory.length}</p>
-                  </div>
-                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                    <Target className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Active Runs Stat */}
-            <Card className="border-2 hover:shadow-2xl hover:shadow-blue-500/20 hover:-translate-y-1 transition-all duration-300 backdrop-blur-sm bg-background/80">
-              <CardContent className="p-4 sm:p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1 sm:mb-2">
-                      Active Runs
-                    </p>
                     <p className="text-2xl sm:text-3xl font-bold text-blue-500">
-                      {runHistory.filter(run => run.status !== 'Done').length}
+                      {runHistory.length}
                     </p>
                   </div>
                   <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
-                    <RefreshCw className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500" />
+                    <Target className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500" />
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Total Leads Stat */}
-            <Card className="border-2 hover:shadow-2xl hover:shadow-purple-500/20 hover:-translate-y-1 transition-all duration-300 backdrop-blur-sm bg-background/80">
+            {/* Latest Campaign */}
+            <Card className="border-2 hover:shadow-2xl hover:shadow-primary/20 hover:-translate-y-1 transition-all duration-300 backdrop-blur-sm bg-background/80">
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1 sm:mb-2">
-                      Total Leads
+                      Latest Campaign
                     </p>
-                    <p className="text-2xl sm:text-3xl font-bold text-purple-500">
-                      {runHistory.reduce((sum, run) => sum + (run.lead_count || 0), 0).toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-colors">
-                    <User className="h-5 w-5 sm:h-6 sm:w-6 text-purple-500" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Completed Stat */}
-            <Card className="border-2 hover:shadow-2xl hover:shadow-green-500/20 hover:-translate-y-1 transition-all duration-300 backdrop-blur-sm bg-background/80">
-              <CardContent className="p-4 sm:p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1 sm:mb-2">
-                      Completed
-                    </p>
-                    <p className="text-2xl sm:text-3xl font-bold text-green-500">
-                      {runHistory.filter(run => run.status === 'Done').length}
+                    <p className="text-base sm:text-lg font-bold truncate">
+                      {runHistory.length > 0 ? runHistory[0].campaign_name || 'Unnamed' : 'None'}
                     </p>
                   </div>
-                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-green-500/10 flex items-center justify-center group-hover:bg-green-500/20 transition-colors">
-                    <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-500" />
+                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors flex-shrink-0">
+                    <Rocket className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                   </div>
                 </div>
               </CardContent>
