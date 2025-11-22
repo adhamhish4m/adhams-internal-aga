@@ -582,7 +582,7 @@ IMPORTANT: If you cannot generate a message, return an empty string.`);
         <div className="w-full max-w-4xl">
         <div className="space-y-6">
           {/* Main Form */}
-          <Card className="p-6 sm:p-8 border-2 backdrop-blur-sm bg-background/80 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300">
+          <Card className="p-6 sm:p-8 glass-strong glass-hover">
             <div className="mb-6 sm:mb-8">
               <h2 className="text-2xl sm:text-3xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary-glow to-primary">
                 AI Growth Accelerator
@@ -689,7 +689,7 @@ IMPORTANT: If you cannot generate a message, return an empty string.`);
 
                     {/* Warning for large lead counts */}
                     {typeof formData.leadCount === 'number' && formData.leadCount > 1000 && (
-                      <div className="mt-2 p-3 sm:p-4 bg-yellow-500/10 border-2 border-yellow-500/30 rounded-lg hover:shadow-lg hover:shadow-yellow-500/20 transition-all duration-300">
+                      <div className="mt-2 p-3 sm:p-4 glass-card border-yellow-500/30 rounded-lg hover:shadow-lg hover:shadow-yellow-500/20 transition-all duration-300">
                         <div className="flex items-start gap-2">
                           <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500 mt-0.5 flex-shrink-0" />
                           <div className="text-xs sm:text-sm text-yellow-600 dark:text-yellow-400">
@@ -715,7 +715,7 @@ IMPORTANT: If you cannot generate a message, return an empty string.`);
                   </Label>
 
                   {/* CSV Requirements */}
-                  <div className="bg-muted/20 rounded-lg p-3 sm:p-4 border-2 border-border/30 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300">
+                  <div className="glass-card rounded-lg p-3 sm:p-4 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300">
                     <div className="space-y-3">
                       <div className="mb-3 p-2 bg-yellow-500/10 border border-yellow-500/30 rounded">
                         <p className="text-xs text-yellow-600 dark:text-yellow-400 font-medium">
@@ -807,7 +807,7 @@ IMPORTANT: If you cannot generate a message, return an empty string.`);
               )}
 
               {/* Research System Prompt */}
-              <Card className="p-4 sm:p-6 bg-blue-50/50 dark:bg-blue-950/20 border-2 border-blue-200 dark:border-blue-800 backdrop-blur-sm hover:shadow-xl hover:shadow-blue-500/20 transition-all duration-300">
+              <Card className="p-4 sm:p-6 glass-card border-blue-500/20 hover:border-blue-500/40 hover:shadow-xl hover:shadow-blue-500/20 transition-all duration-300">
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
@@ -829,7 +829,7 @@ IMPORTANT: If you cannot generate a message, return an empty string.`);
               </Card>
 
               {/* Personalization System Prompt */}
-              <Card className="p-4 sm:p-6 bg-purple-50/50 dark:bg-purple-950/20 border-2 border-purple-200 dark:border-purple-800 backdrop-blur-sm hover:shadow-xl hover:shadow-purple-500/20 transition-all duration-300">
+              <Card className="p-4 sm:p-6 glass-card border-purple-500/20 hover:border-purple-500/40 hover:shadow-xl hover:shadow-purple-500/20 transition-all duration-300">
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>

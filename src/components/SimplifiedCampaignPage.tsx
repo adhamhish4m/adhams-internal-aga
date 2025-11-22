@@ -487,8 +487,8 @@ export function SimplifiedCampaignPage() {
 
         {/* Header Section */}
         <div className="mb-6 sm:mb-8">
-          <Card className="border-2 backdrop-blur-sm bg-background/80 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300">
-            <CardHeader className="border-b bg-muted/30 p-4 sm:p-6">
+          <Card className="glass-strong glass-hover">
+            <CardHeader className="glass-table-header p-4 sm:p-6">
               <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 sm:gap-6">
                 {/* Left: Campaign Name & Status */}
                 <div className="flex-1">
@@ -574,7 +574,7 @@ export function SimplifiedCampaignPage() {
             {/* Stats Grid */}
             <CardContent className="p-4 sm:p-6">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-                <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border-2 hover:shadow-xl hover:shadow-purple-500/20 hover:-translate-y-1 transition-all duration-300">
+                <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg glass-card glass-hover hover:shadow-purple-500/20 hover:-translate-y-1">
                   <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-purple-500/10 flex items-center justify-center flex-shrink-0">
                     <Users className="h-5 w-5 sm:h-6 sm:w-6 text-purple-500" />
                   </div>
@@ -586,7 +586,7 @@ export function SimplifiedCampaignPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border-2 hover:shadow-xl hover:shadow-green-500/20 hover:-translate-y-1 transition-all duration-300">
+                <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg glass-card glass-hover hover:shadow-green-500/20 hover:-translate-y-1">
                   <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-green-500/10 flex items-center justify-center flex-shrink-0">
                     <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-500" />
                   </div>
@@ -598,7 +598,7 @@ export function SimplifiedCampaignPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border-2 hover:shadow-xl hover:shadow-blue-500/20 hover:-translate-y-1 transition-all duration-300">
+                <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg glass-card glass-hover hover:shadow-blue-500/20 hover:-translate-y-1">
                   <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-blue-500/10 flex items-center justify-center flex-shrink-0">
                     <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500" />
                   </div>
@@ -615,8 +615,8 @@ export function SimplifiedCampaignPage() {
         </div>
 
         {/* Leads Section */}
-        <Card className="border-2 backdrop-blur-sm bg-background/80 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300">
-          <CardHeader className="border-b bg-muted/30 p-4 sm:p-6">
+        <Card className="glass-strong glass-hover">
+          <CardHeader className="glass-table-header p-4 sm:p-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <CardTitle className="text-2xl font-bold">Campaign Leads</CardTitle>
@@ -702,9 +702,9 @@ export function SimplifiedCampaignPage() {
                   // Card View
                   <div className="grid gap-6">
                     {getPaginatedLeads().map((paginatedLead) => (
-                        <Card 
-                          key={paginatedLead.uniqueId} 
-                          className="bg-gradient-to-r from-muted/20 to-muted/10 border border-border/30 hover:from-muted/30 hover:to-muted/20 hover:border-primary/20 transition-all duration-200"
+                        <Card
+                          key={paginatedLead.uniqueId}
+                          className="glass-card glass-hover"
                         >
                           <CardContent className="p-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -915,8 +915,8 @@ export function SimplifiedCampaignPage() {
                   <div className="space-y-2">
                     {getPaginatedLeads().map((paginatedLead) => (
                         <div
-                          key={paginatedLead.uniqueId} 
-                          className="flex items-center justify-between p-4 bg-gradient-to-r from-muted/10 to-muted/5 border border-border/20 rounded-lg hover:from-muted/20 hover:to-muted/10 hover:border-purple-400/30 transition-all duration-200 group"
+                          key={paginatedLead.uniqueId}
+                          className="glass-table-row flex items-center justify-between p-4 rounded-lg group"
                         >
                           {/* Left side - Main info */}
                           <div className="flex items-center gap-6 flex-1 min-w-0">

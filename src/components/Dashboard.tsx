@@ -409,7 +409,7 @@ export function Dashboard() {
         <div className="mb-6 sm:mb-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {/* Total Personalized Messages */}
-            <Card className="border-2 hover:shadow-2xl hover:shadow-green-500/20 hover:-translate-y-1 transition-all duration-300 backdrop-blur-sm bg-background/80">
+            <Card className="glass-card glass-hover hover:shadow-green-500/20 hover:-translate-y-1">
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -428,7 +428,7 @@ export function Dashboard() {
             </Card>
 
             {/* Total Campaigns */}
-            <Card className="border-2 hover:shadow-2xl hover:shadow-blue-500/20 hover:-translate-y-1 transition-all duration-300 backdrop-blur-sm bg-background/80">
+            <Card className="glass-card glass-hover hover:shadow-blue-500/20 hover:-translate-y-1">
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -447,7 +447,7 @@ export function Dashboard() {
             </Card>
 
             {/* Latest Campaign */}
-            <Card className="border-2 hover:shadow-2xl hover:shadow-primary/20 hover:-translate-y-1 transition-all duration-300 backdrop-blur-sm bg-background/80">
+            <Card className="glass-card glass-hover hover:shadow-primary/20 hover:-translate-y-1">
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
@@ -468,8 +468,8 @@ export function Dashboard() {
         </div>
 
         {/* Main Content - Campaigns Table */}
-        <Card className="border-2 backdrop-blur-sm bg-background/80 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300">
-          <CardHeader className="border-b bg-muted/30 p-4 sm:p-6">
+        <Card className="glass-strong glass-hover">
+          <CardHeader className="glass-table-header p-4 sm:p-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <CardTitle className="text-xl sm:text-2xl font-bold">Campaigns</CardTitle>
@@ -529,11 +529,11 @@ export function Dashboard() {
 
           <CardContent className="p-0">
             {runHistory.length > 0 ? (
-              <div className="divide-y">
+              <div className="divide-y divide-white/5">
                 {runHistory.map((run) => (
                   <div
                     key={run.run_id}
-                    className="group p-4 sm:p-6 hover:bg-primary/5 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 cursor-pointer relative overflow-hidden"
+                    className="glass-table-row group p-4 sm:p-6 cursor-pointer relative overflow-hidden"
                     onClick={() => run.campaign_name && navigate(`/campaign/${encodeURIComponent(run.campaign_name)}`)}
                   >
                     {/* Hover glow effect */}

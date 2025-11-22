@@ -150,6 +150,35 @@
   .metric-card-hover {
     @apply transition-all duration-300 ease-out hover:shadow-hover-glow hover:-translate-y-1 hover:scale-105;
   }
+
+  /* Glassmorphism Effects */
+  .glass {
+    @apply backdrop-blur-sm bg-black/[0.15] border border-white/[0.05];
+  }
+
+  .glass-card {
+    @apply backdrop-blur-sm bg-black/[0.2] border border-white/[0.05] shadow-lg;
+  }
+
+  .glass-strong {
+    @apply backdrop-blur-md bg-black/[0.25] border border-white/[0.08] shadow-xl;
+  }
+
+  .glass-hover {
+    @apply transition-all duration-300 hover:bg-black/[0.3] hover:border-white/[0.08] hover:shadow-lg hover:shadow-primary/[0.06];
+  }
+
+  .glass-table {
+    @apply backdrop-blur-sm bg-black/[0.1] border border-white/[0.04];
+  }
+
+  .glass-table-header {
+    @apply backdrop-blur-sm bg-black/[0.15] border-b border-white/[0.06];
+  }
+
+  .glass-table-row {
+    @apply backdrop-blur-[2px] bg-black/[0.1] border-b border-white/[0.03] hover:bg-black/[0.15] transition-all duration-200;
+  }
 }
 
 @layer utilities {
