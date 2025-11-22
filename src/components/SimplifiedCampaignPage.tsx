@@ -10,6 +10,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Particles } from '@/components/ui/particles';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -474,7 +475,17 @@ export function SimplifiedCampaignPage() {
         <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000" />
       </div>
 
-      <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto">
+      {/* Particle field effects */}
+      <Particles
+        className="absolute inset-0"
+        quantity={150}
+        ease={50}
+        staticity={30}
+        color="#a855f7"
+        size={0.6}
+      />
+
+      <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto relative z-10">
         {/* Back Button */}
         <Button
           variant="ghost"
