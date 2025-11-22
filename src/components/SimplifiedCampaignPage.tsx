@@ -475,14 +475,14 @@ export function SimplifiedCampaignPage() {
         <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000" />
       </div>
 
-      {/* Particle field effects */}
+      {/* Particle field effects - OPTIMIZED FOR PRODUCTION */}
       <Particles
         className="absolute inset-0"
-        quantity={50}
-        ease={80}
-        staticity={60}
+        quantity={40}
+        ease={90}
+        staticity={70}
         color="#a855f7"
-        size={0.5}
+        size={0.4}
       />
 
       <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto relative z-10">

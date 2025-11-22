@@ -14,12 +14,24 @@ function useMousePosition(): MousePosition {
     y: 0,
   });
   useEffect(() => {
+    let rafId: number;
+    let lastUpdate = 0;
+    const throttleDelay = 16; // ~60fps throttle
+
     const handleMouseMove = (event: MouseEvent) => {
-      setMousePosition({ x: event.clientX, y: event.clientY });
+      const now = Date.now();
+      if (now - lastUpdate < throttleDelay) return;
+
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        setMousePosition({ x: event.clientX, y: event.clientY });
+        lastUpdate = now;
+      });
     };
-    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
+      if (rafId) cancelAnimationFrame(rafId);
     };
   }, []);
   return mousePosition;
@@ -70,17 +82,30 @@ export const Particles: React.FC<ParticlesProps> = ({
   const mousePosition = useMousePosition();
   const mouse = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const canvasSize = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
-  const dpr = typeof window !== "undefined" ? window.devicePixelRatio : 1;
+  // Limit DPR to 1.5 max for performance on high-DPI displays
+  const dpr = typeof window !== "undefined" ? Math.min(window.devicePixelRatio, 1.5) : 1;
 
   useEffect(() => {
     if (canvasRef.current) {
-      context.current = canvasRef.current.getContext("2d");
+      context.current = canvasRef.current.getContext("2d", {
+        alpha: true,
+        desynchronized: true, // Improves performance
+      });
     }
     initCanvas();
     animate();
-    window.addEventListener("resize", initCanvas);
+
+    // Debounce resize for better performance
+    let resizeTimeout: NodeJS.Timeout;
+    const handleResize = () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(initCanvas, 150);
+    };
+
+    window.addEventListener("resize", handleResize, { passive: true });
     return () => {
-      window.removeEventListener("resize", initCanvas);
+      window.removeEventListener("resize", handleResize);
+      clearTimeout(resizeTimeout);
     };
   }, [color]);
 
@@ -262,7 +287,11 @@ export const Particles: React.FC<ParticlesProps> = ({
       ref={canvasContainerRef}
       aria-hidden="true"
     >
-      <canvas ref={canvasRef} className="size-full" />
+      <canvas
+        ref={canvasRef}
+        className="size-full"
+        style={{ willChange: 'transform' }}
+      />
     </div>
   );
 };
