@@ -478,11 +478,11 @@ export function SimplifiedCampaignPage() {
       {/* Particle field effects */}
       <Particles
         className="absolute inset-0"
-        quantity={150}
-        ease={50}
-        staticity={30}
+        quantity={50}
+        ease={80}
+        staticity={60}
         color="#a855f7"
-        size={0.6}
+        size={0.5}
       />
 
       <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto relative z-10">
