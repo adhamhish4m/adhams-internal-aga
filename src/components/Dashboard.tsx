@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Particles } from '@/components/ui/particles';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -388,10 +389,22 @@ export function Dashboard() {
         <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000" />
       </div>
 
-      <Navigation />
+      {/* Particle field effects */}
+      <Particles
+        className="absolute inset-0"
+        quantity={150}
+        ease={50}
+        staticity={30}
+        color="#a855f7"
+        size={0.6}
+      />
+
+      <div className="relative z-10">
+        <Navigation />
+      </div>
 
       {/* Main Container */}
-      <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto">
+      <div className="relative p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto" style={{ zIndex: 10 }}>
         {/* Top Bar - Stats Overview */}
         <div className="mb-6 sm:mb-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">

@@ -168,6 +168,34 @@
     }
   }
 
+  @keyframes sparkle-animation {
+    0% {
+      opacity: 0;
+      transform: translate(0, 0) scale(0) rotate(0deg);
+    }
+    10% {
+      opacity: 0.6;
+      transform: translate(
+        calc(var(--random-x, 0) * 10px),
+        calc(var(--random-y, 0) * 10px)
+      ) scale(1) rotate(90deg);
+    }
+    50% {
+      opacity: 1;
+      transform: translate(
+        calc(var(--random-x, 0) * 40px),
+        calc(var(--random-y, 0) * -50px)
+      ) scale(1.2) rotate(180deg);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(
+        calc(var(--random-x, 0) * 70px),
+        calc(var(--random-y, 0) * -90px)
+      ) scale(0.3) rotate(360deg);
+    }
+  }
+
   .animate-blob {
     animation: blob 7s infinite;
   }

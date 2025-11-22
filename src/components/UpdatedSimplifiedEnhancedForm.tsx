@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { Particles } from '@/components/ui/particles';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Navigation } from './Navigation';
@@ -563,9 +564,21 @@ IMPORTANT: If you cannot generate a message, return an empty string.`);
         <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000" />
       </div>
 
-      <Navigation />
+      {/* Particle field effects */}
+      <Particles
+        className="absolute inset-0"
+        quantity={150}
+        ease={50}
+        staticity={30}
+        color="#a855f7"
+        size={0.6}
+      />
 
-      <div className="flex items-center justify-center p-4 pt-20">
+      <div className="relative z-10">
+        <Navigation />
+      </div>
+
+      <div className="relative z-10 flex items-center justify-center p-4 pt-20">
         <div className="w-full max-w-4xl">
         <div className="space-y-6">
           {/* Main Form */}
